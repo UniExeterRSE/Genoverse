@@ -41,8 +41,8 @@ export default Model.extend({
         id       : `${chr}:${start}:${i}`,
         chr      : chr,
         start    : start + i,
-        end      : start + i + this.chunkSize - 1,
-        sequence : data.substr(i, this.chunkSize),
+        end      : start + i + this.chunkSize + 1,      // +2 bases overlap
+        sequence : data.slice(i, i + this.chunkSize + 2),
         sort     : start + i,
       };
 
