@@ -8,7 +8,7 @@ const plugin = function (pluginConf) {
     const chromosome   = jQuery('<div class="gv-chromosome">');
     const container    = jQuery('<div class="gv-karyotype-container">').html(chromosome).insertBefore(this.wrapper);
     const assemblyName = this.assembly || this.genomeName;
-    const name         = `${pluginConf.showAssembly && assemblyName ? `${assemblyName}: ` : ''}Chr ${this.chr}`;
+    const name         = `${pluginConf.showAssembly && assemblyName ? `${assemblyName} · ` : ''}${this.chr}`;
 
     if (pluginConf.showAssembly && assemblyName) {
       container.addClass('gv-show-assembly');
