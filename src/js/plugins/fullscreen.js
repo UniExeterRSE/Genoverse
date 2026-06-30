@@ -38,12 +38,10 @@ const plugin = function () {
     requestName : requestName,
 
     enterEvent: (browser) => {
-      console.log('browser.superContainer.width() = ', browser.superContainer.width());
       browser.superContainer.addClass('gv-fullscreen');
       // window.innerWidth inside an iframe reflects the iframe's viewport and does
       // not update when the element goes fullscreen. Use screen.width instead,
       // which gives the physical screen width in CSS pixels regardless of iframe sizing.
-      console.log('screen.width = ', screen.width);
       browser.setWidth(screen.width);
       browser.controlPanel.find('.gv-fullscreen-button .fas').removeClass('fa-expand-arrows-alt').addClass('fa-compress-arrows-alt');
     },
@@ -54,7 +52,6 @@ const plugin = function () {
         // Restore the width captured just before fullscreen was requested.
         // document.documentElement.clientWidth is unreliable here because
         // Genoverse's own setWidth calls alter the document layout.
-        console.log('restoring preFullscreenWidth = ', browser._preFullscreenWidth);
         browser.setWidth(browser._preFullscreenWidth);
         browser.controlPanel.find('.gv-fullscreen-button .fas').removeClass('fa-compress-arrows-alt').addClass('fa-expand-arrows-alt');
       }
@@ -85,7 +82,6 @@ const plugin = function () {
           // Capture the rendered width now — before requestFullscreen() is called
           // and before Genoverse's own setWidth calls alter the document layout.
           browser._preFullscreenWidth = browser.superContainer.width();
-          console.log('captured _preFullscreenWidth = ', browser._preFullscreenWidth);
           // Register the listener before requesting fullscreen so the enter
           // transition is handled once the browser applies it.
           document.addEventListener(browser.fullscreenVars.eventName, browser.fullscreenVars.eventListener);
