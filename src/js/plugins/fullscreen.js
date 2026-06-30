@@ -38,22 +38,35 @@ const plugin = function () {
     requestName : requestName,
 
     enterEvent: (browser) => {
-      browser.preFullscreenWidth = browser.superContainer.width();
+      console.log('browser.superContainer.width() = ', browser.superContainer.width());
       browser.superContainer.addClass('gv-fullscreen');
-      browser.setWidth(window.innerWidth);
+      // window.innerWidth inside an iframe reflects the iframe's viewport and does
+      // not update when the element goes fullscreen. Use screen.width instead,
+      // which gives the physical screen width in CSS pixels regardless of iframe sizing.
+      console.log('screen.width = ', screen.width);
+      browser.setWidth(screen.width);
       browser.controlPanel.find('.gv-fullscreen-button .fas').removeClass('fa-expand-arrows-alt').addClass('fa-compress-arrows-alt');
     },
 
     exitEvent: (browser) => {
       if (browser.superContainer.hasClass('gv-fullscreen')) {
         browser.superContainer.removeClass('gv-fullscreen');
-        browser.setWidth(browser.preFullscreenWidth);
+        // Restore the width captured just before fullscreen was requested.
+        // document.documentElement.clientWidth is unreliable here because
+        // Genoverse's own setWidth calls alter the document layout.
+        console.log('restoring preFullscreenWidth = ', browser._preFullscreenWidth);
+        browser.setWidth(browser._preFullscreenWidth);
         browser.controlPanel.find('.gv-fullscreen-button .fas').removeClass('fa-compress-arrows-alt').addClass('fa-expand-arrows-alt');
       }
     },
 
+    // Handles both enter and exit transitions.
+    // Called after the browser has finished applying the fullscreen change,
+    // so screen.width correctly reflects the full-screen viewport width.
     eventListener: () => {
-      if (!genoverse.superContainer.is(document[genoverse.fullscreenVars.elemName])) {
+      if (genoverse.superContainer.is(document[genoverse.fullscreenVars.elemName])) {
+        genoverse.fullscreenVars.enterEvent(genoverse);
+      } else {
         genoverse.fullscreenVars.exitEvent(genoverse);
         document.removeEventListener(genoverse.fullscreenVars.eventName, genoverse.fullscreenVars.eventListener);
       }
@@ -69,9 +82,16 @@ const plugin = function () {
         if (browser.superContainer.hasClass('gv-fullscreen')) {
           document[browser.fullscreenVars.cancelName]();
         } else {
+          // Capture the rendered width now — before requestFullscreen() is called
+          // and before Genoverse's own setWidth calls alter the document layout.
+          browser._preFullscreenWidth = browser.superContainer.width();
+          console.log('captured _preFullscreenWidth = ', browser._preFullscreenWidth);
+          // Register the listener before requesting fullscreen so the enter
+          // transition is handled once the browser applies it.
           document.addEventListener(browser.fullscreenVars.eventName, browser.fullscreenVars.eventListener);
           browser.superContainer[0][browser.fullscreenVars.requestName]();
-          browser.fullscreenVars.enterEvent(browser);
+          // enterEvent is intentionally NOT called here — it must run after
+          // the fullscreenchange event fires so that screen.width is available.
         }
       },
     });
